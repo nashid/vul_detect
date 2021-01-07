@@ -9,10 +9,10 @@ from pytorch_lightning import seed_everything, Trainer, LightningModule, Lightni
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping, LearningRateMonitor
 from pytorch_lightning.loggers import WandbLogger, TensorBoardLogger
 
-from models import TOKEN_BLSTM, VDP_BLSTM, SYS_BLSTM, SYSDataModule, VGD_GNN, TokenDataModule, VDPDataModule, VGDDataModule, MulVDP_BLSTM, MulVDPDataModule, Code2SeqAttn, C2SPathContextDataModule, Code2VecAttn, C2VPathContextDataModule
+from models import TOKEN_BLSTM, VDP_BLSTM, SYS_BGRU, SYSDataModule, VGD_GNN, TokenDataModule, VDPDataModule, VGDDataModule, MulVDP_BLSTM, MulVDPDataModule, Code2SeqAttn, C2SPathContextDataModule, Code2VecAttn, C2VPathContextDataModule
 
-from utils.callback import UploadCheckpointCallback, PrintEpochResultCallback
-from utils.common import print_config, filter_warnings, get_config
+from utils.callback import UploadCheckpointCallback, PrintEpochResultCallback, CollectTestResCallback
+from utils.common import print_config, filter_warnings, get_config, CWEID_AVA
 from utils.vocabulary import Vocabulary_token, Vocabulary_c2s
 
 
@@ -67,7 +67,7 @@ def get_VGD(
 def get_SYS(
     config: DictConfig, vocabulary: Vocabulary_token
 ) -> Tuple[LightningModule, LightningDataModule]:
-    model = SYS_BLSTM(config, vocabulary)
+    model = SYS_BGRU(config, vocabulary)
     data_module = SYSDataModule(config, vocabulary)
     return model, data_module
 
@@ -146,6 +146,7 @@ def train(config: DictConfig, resume_from_checkpoint: str = None):
         mode="min")
     # define callback for printing intermediate result
     print_epoch_result_callback = PrintEpochResultCallback("train", "val")
+    collect_test_res_callback = CollectTestResCallback(config)
     # use gpu if it exists
     gpu = 1 if torch.cuda.is_available() else None
     # define learning rate logger
@@ -163,7 +164,8 @@ def train(config: DictConfig, resume_from_checkpoint: str = None):
         progress_bar_refresh_rate=config.progress_bar_refresh_rate,
         callbacks=[
             lr_logger, early_stopping_callback, checkpoint_callback,
-            print_epoch_result_callback, upload_checkpoint_callback
+            print_epoch_result_callback, upload_checkpoint_callback,
+            collect_test_res_callback
         ],
         resume_from_checkpoint=resume_from_checkpoint,
     )
@@ -183,3 +185,22 @@ if __name__ == "__main__":
 
     _config = get_config(args.model, args.dataset, log_offline=args.offline)
     train(_config, args.resume)
+    # hasdone_ids = list()
+    # if not os.path.exists('hasdone_id.txt'):
+    #     with open('hasdone_id.txt','w') as f:
+    #         f.write('')
+    # else:
+    #     with open('hasdone_id.txt','r') as f:
+    #         text = f.read()
+    #         hasdone_ids = text.split('\n')
+    #         print(hasdone_ids)
+    # for cwe in CWEID_AVA:
+    #     if cwe not in hasdone_ids:
+    #         try:
+    #             _config = get_config(args.model, cwe, log_offline=args.offline)
+    #             train(_config, args.resume)
+    #             with open('hasdone_id.txt','a+') as f:
+    #                 f.write(cwe+'\n')
+    #         except Exception as e:
+    #             with open('error.txt', 'a+') as f:
+    #                 f.write(args.model + '\n' + cwe + '\n' + str(e) + '\n')

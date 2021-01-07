@@ -5,7 +5,7 @@ import torch
 from omegaconf import DictConfig
 from pytorch_lightning import Trainer, seed_everything
 
-from models import TOKEN_BLSTM, VDP_BLSTM, SYS_BLSTM, SYSDataModule, VGD_GNN, TokenDataModule, VDPDataModule, VGDDataModule, MulVDP_BLSTM, MulVDPDataModule, Code2SeqAttn, C2SPathContextDataModule, Code2VecAttn, C2VPathContextDataModule
+from models import TOKEN_BLSTM, VDP_BLSTM, SYS_BGRU, SYSDataModule, VGD_GNN, TokenDataModule, VDPDataModule, VGDDataModule, MulVDP_BLSTM, MulVDPDataModule, Code2SeqAttn, C2SPathContextDataModule, Code2VecAttn, C2VPathContextDataModule
 
 from utils.vocabulary import Vocabulary_c2s, Vocabulary_token
 

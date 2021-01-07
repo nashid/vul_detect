@@ -19,7 +19,7 @@ from utils.matrics import Statistic
 from utils.vocabulary import Vocabulary_token
 
 
-class SYS_BLSTM(LightningModule):
+class SYS_BGRU(LightningModule):
     _negative_value = -numpy.inf
     _activations = {
         "relu": nn.ReLU(),
@@ -60,6 +60,15 @@ class SYS_BLSTM(LightningModule):
         self.dropout_rnn = nn.Dropout(self._config.encoder.rnn_dropout)
         # BLSTM layer
         self.blstm_layer = nn.LSTM(
+            input_size=self._config.encoder.embedding_size,
+            hidden_size=self._config.encoder.rnn_size,
+            num_layers=self._config.encoder.rnn_num_layers,
+            bidirectional=self._config.encoder.use_bi_rnn,
+            dropout=self._config.encoder.rnn_dropout
+            if self._config.encoder.rnn_num_layers > 1 else 0,
+            batch_first=True)
+        # BGUR layer
+        self.bgru_layer = nn.GRU(
             input_size=self._config.encoder.embedding_size,
             hidden_size=self._config.encoder.rnn_size,
             num_layers=self._config.encoder.rnn_num_layers,
@@ -123,8 +132,8 @@ class SYS_BLSTM(LightningModule):
                                               sorted_path_lengths,
                                               batch_first=True)
 
-        # blstm_out: (batch size, seq len, 2 * hidden size), h_n: (num layers * 2, batch size, hidden size)
-        blstm_out, (h_n, c_n) = self.blstm_layer(x)
+        # bgru_out: (batch size, seq len, 2 * hidden size), h_n: (num layers * 2, batch size, hidden size)
+        bgru_out, h_n = self.bgru_layer(x)
         # (batch size, num layers * 2, hidden size)
         h_n = h_n.permute(1, 0, 2)
 
