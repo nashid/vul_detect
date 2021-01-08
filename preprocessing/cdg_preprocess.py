@@ -131,31 +131,14 @@ def preprocess(config: DictConfig):
     vectors = numpy.array(vectors)
     labels = numpy.array(labels)
     is_back = numpy.array(is_back)
-    positive_idxs = numpy.where(labels == 1)[0]
-    negative_idxs = numpy.where(labels == 0)[0]
-    # undersampled_negative_idxs = numpy.random.choice(negative_idxs,
-    #                                                  len(positive_idxs),
-    #                                                  replace=False)
-    # resampled_idxs = numpy.concatenate(
-    #     [positive_idxs, undersampled_negative_idxs])
-    if len(positive_idxs) > len(positive_idxs):
-        positive_idxs = numpy.random.choice(positive_idxs,
-                                            len(negative_idxs),
-                                            replace=False)
-    elif len(positive_idxs) > len(positive_idxs):
-        negative_idxs = numpy.random.choice(negative_idxs,
-                                            len(positive_idxs),
-                                            replace=False)
-    else:
-        pass
-    resampled_idxs = numpy.concatenate([positive_idxs, negative_idxs])
+
 
     X_train, X_test, y_train, y_test, bk_train, bk_test = train_test_split(
-        vectors[resampled_idxs],
-        labels[resampled_idxs],
-        is_back[resampled_idxs],
+        vectors,
+        labels,
+        is_back,
         test_size=0.2,
-        stratify=labels[resampled_idxs])
+        stratify=labels)
     X_test, X_val, y_test, y_val, bk_test, bk_val = train_test_split(
         X_test, y_test, bk_test, test_size=0.5, stratify=y_test)
     bpc = BufferedPathContext.create_from_lists(list(X_train), list(y_train),
