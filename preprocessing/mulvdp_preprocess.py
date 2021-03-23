@@ -133,13 +133,31 @@ def preprocess(config: DictConfig):
     global_vectors = numpy.array(global_vectors)
     local_vectors = numpy.array(local_vectors)
     labels = numpy.array(labels)
+    positive_idxs = numpy.where(labels == 1)[0]
+    negative_idxs = numpy.where(labels == 0)[0]
+    # undersampled_negative_idxs = numpy.random.choice(negative_idxs,
+    #                                                  len(positive_idxs),
+    #                                                  replace=False)
+    # resampled_idxs = numpy.concatenate(
+    #     [positive_idxs, undersampled_negative_idxs])
+    if len(positive_idxs) > len(positive_idxs):
+        positive_idxs = numpy.random.choice(positive_idxs,
+                                            len(negative_idxs),
+                                            replace=False)
+    elif len(positive_idxs) > len(positive_idxs):
+        negative_idxs = numpy.random.choice(negative_idxs,
+                                            len(positive_idxs),
+                                            replace=False)
+    else:
+        pass
+    resampled_idxs = numpy.concatenate([positive_idxs, negative_idxs])
 
     X_train, X_test, local_X_train, local_X_test, y_train, y_test = train_test_split(
-        global_vectors,
-        local_vectors,
-        labels,
+        global_vectors[resampled_idxs],
+        local_vectors[resampled_idxs],
+        labels[resampled_idxs],
         test_size=0.2,
-        stratify=labels)
+        stratify=labels[resampled_idxs])
     X_test, X_val, local_X_test, local_X_val, y_test, y_val = train_test_split(
         X_test, local_X_test, y_test, test_size=0.5, stratify=y_test)
     bpc = BufferedPathContext.create_from_lists(list(X_train),
